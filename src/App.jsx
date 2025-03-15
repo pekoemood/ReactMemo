@@ -1,5 +1,34 @@
+import { useState } from "react"
 
+const initial = [{
+  id: 1,
+  title: '明日の予定',
+  description: '今日はとても良い日でした。明日も元気に過ごしたいです'
+}]
+
+let nextId = 1
 const App = () => {
+  const [ memos, setMemos ] = useState(initial);
+  const [ text, setText ] = useState('');
+  const [selectMemoId, setSelectMemoId] = useState(null); 
+
+  const addMemo = () => {
+    setMemos((pre) => [...pre, {id: nextId++, title: text, description: ''}]);
+    setText('');
+  }
+
+  const handleTitleClick =(memoId) => {
+    setSelectMemoId(memoId);
+  }
+
+  const editMemo = (e,selectMemo) => {
+    const updateDescription = e.target.value;
+    // setMemos((pre) => [...pre, {id: newMemo.id, title: newMemo.title, description: e.target,value} ])
+    setMemos((pre) => pre.map((memo) => memo.id === selectMemo.id ? {...memo, description: updateDescription} : memo ))
+  }
+
+  const selectMemo = memos.find((memo) => memo.id === selectMemoId);
+
   return (
     <>
       <div className="container mx-auto px-4">
@@ -10,9 +39,9 @@ const App = () => {
         </header>
         <div className="flex mt-8 justify-center items-center a space-x-4">
           <div className="">
-            <input className="border h-10 p-4 rounded-lg" type="text" placeholder="ここにタスクを入力" />
+            <input className="border h-10 p-4 rounded-lg" type="text" placeholder="ここにタイトルを入力" value={text} onChange={(e) => setText(e.target.value)} />
           </div>
-          <button className="bg-blue-400 rounded-lg py-2 px-4">
+          <button className="bg-blue-400 rounded-lg py-2 px-4" onClick={addMemo}>
             追加
           </button>
           <div className="flex items-center space-x-2">
@@ -23,18 +52,27 @@ const App = () => {
             </select>
           </div>
           <div className="">
-            <input className="border h-10 p-4 rounded-lg" type="search" placeholder="タスクを検索" />
+            <input className="border h-10 p-4 rounded-lg" type="search" placeholder="タイトルを検索" />
           </div>
 
           
         </div>
         <div className="grid grid-cols-4 gap-4 mt-8">
-          <div className="border max-h-full col-span-1 flex flex-col p-8 font-semibold bg-gray-100 space-y-4 underline">
-            <h2>メモのタイトル</h2>
-            <h2>メモのタイトル２</h2>
+          <div className="border max-h-full col-span-1 flex flex-col p-8 font-semibold space-y-4 underline bg-white">
+            {memos.map((memo) => (
+              <h2 key={memo.id} onClick={() => handleTitleClick(memo.id)}>{memo.title}</h2>
+            ))}
           </div>
           <div className="border max-h-full col-span-3 p-8 bg-white">
-            2
+          <div className="flex items-center space-x-4">
+            <label htmlFor="">カテゴリを追加</label>
+            <input className="border h-10 p-4 rounded-lg" type="text" placeholder="ここにカテゴリを入力" />
+            <button className="bg-teal-400 rounded-lg py-2 px-4">カテゴリを設定</button>
+          </div>
+          <div className="mt-8">
+            {selectMemo && (<input className='border max-h-full w-full' value={selectMemo.description} onChange={(e) => editMemo(e,selectMemo)}/>)}
+          </div>
+
           </div>
         </div>
       </div>
