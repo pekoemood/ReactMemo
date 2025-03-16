@@ -1,33 +1,69 @@
-import { useState } from "react"
+import { useEffect, useState } from "react";
+import Navbar from "./components/Navbar";
+import Title from "./components/Title";
+import Description from "./components/Description";
 
-const initial = [{
-  id: 1,
-  title: '明日の予定',
-  description: '今日はとても良い日でした。明日も元気に過ごしたいです'
-}]
+const initial = [
+  {
+    id: 1,
+    title: "明日の予定",
+    description: "今日はとても良い日でした。明日も元気に過ごしたいです",
+    edit: false,
+    category: '仕事',
+  },
+];
 
-let nextId = 1
+let nextId = 1;
 const App = () => {
-  const [ memos, setMemos ] = useState(initial);
-  const [ text, setText ] = useState('');
-  const [selectMemoId, setSelectMemoId] = useState(null); 
+  const [memos, setMemos] = useState(() => {
+    const saveMemos = localStorage.getItem("memos");
+    return saveMemos ? JSON.parse(saveMemos) : initial
+  });
+  const [text, setText] = useState("");
+  const [selectMemoId, setSelectMemoId] = useState(1);
+  const [filterTitleText, setFilterTitleText] = useState('');
 
-  const addMemo = () => {
-    setMemos((pre) => [...pre, {id: nextId++, title: text, description: ''}]);
-    setText('');
-  }
+  useEffect(() => {
+    localStorage.setItem("memos", JSON.stringify(memos))
+  },[memos])
 
-  const handleTitleClick =(memoId) => {
+  const addMemo = (category) => {
+    setMemos((pre) => [
+      ...pre,
+      { id: nextId++, title: text, description: "", edit: false, category: category },
+    ]);
+    setText("");
+  };
+
+  const handleTitleClick = (memoId) => {
     setSelectMemoId(memoId);
-  }
+  };
 
-  const editMemo = (e,selectMemo) => {
+  const editMemo = (e, selectMemo) => {
     const updateDescription = e.target.value;
-    // setMemos((pre) => [...pre, {id: newMemo.id, title: newMemo.title, description: e.target,value} ])
-    setMemos((pre) => pre.map((memo) => memo.id === selectMemo.id ? {...memo, description: updateDescription} : memo ))
-  }
+    setMemos((pre) =>
+      pre.map((memo) =>
+        memo.id === selectMemo.id
+          ? { ...memo, description: updateDescription }
+          : memo
+      )
+    );
+  };
+
+  const toggleEditClick = (id) => {
+    setMemos((pre) =>
+      pre.map((memo) =>
+        memo.id === id ? { ...memo, edit: !memo.edit } : memo
+      )
+    );
+  };
+
+  const handleDeleteTitleClick = (memoId) => {
+    setMemos((pre) => pre.filter((memo) => memo.id !== memoId));
+  };
 
   const selectMemo = memos.find((memo) => memo.id === selectMemoId);
+  const filterMemos = memos.filter((memo) => memo.title.toLowerCase().includes(filterTitleText));
 
   return (
     <>
@@ -37,49 +73,18 @@ const App = () => {
             簡易メモアプリ
           </h1>
         </header>
-        <div className="flex mt-8 justify-center items-center a space-x-4">
-          <div className="">
-            <input className="border h-10 p-4 rounded-lg" type="text" placeholder="ここにタイトルを入力" value={text} onChange={(e) => setText(e.target.value)} />
-          </div>
-          <button className="bg-blue-400 rounded-lg py-2 px-4" onClick={addMemo}>
-            追加
-          </button>
-          <div className="flex items-center space-x-2">
-            <label className="text-gray-700 font-semibold" htmlFor="category">カテゴリ</label>
-            <select name="category" id="category" className="border rounded-lg p-2 bg-white text-gray-700 focus:outline-none focus:ring-blue-400">
-              <option value="">仕事</option>
-              <option value="">趣味</option>
-            </select>
-          </div>
-          <div className="">
-            <input className="border h-10 p-4 rounded-lg" type="search" placeholder="タイトルを検索" />
-          </div>
-
-          
-        </div>
-        <div className="grid grid-cols-4 gap-4 mt-8">
-          <div className="border max-h-full col-span-1 flex flex-col p-8 font-semibold space-y-4 underline bg-white">
-            {memos.map((memo) => (
-              <h2 key={memo.id} onClick={() => handleTitleClick(memo.id)}>{memo.title}</h2>
-            ))}
-          </div>
-          <div className="border max-h-full col-span-3 p-8 bg-white">
-          <div className="flex items-center space-x-4">
-            <label htmlFor="">カテゴリを追加</label>
-            <input className="border h-10 p-4 rounded-lg" type="text" placeholder="ここにカテゴリを入力" />
-            <button className="bg-teal-400 rounded-lg py-2 px-4">カテゴリを設定</button>
-          </div>
-          <div className="mt-8">
-            {selectMemo && (<input className='border max-h-full w-full' value={selectMemo.description} onChange={(e) => editMemo(e,selectMemo)}/>)}
-          </div>
-
-          </div>
+        <Navbar text={text} setText={setText} addMemo={addMemo} filter={filterTitleText} setFilter={setFilterTitleText}/>
+        <div className="grid grid-cols-16 gap-5 mt-8">
+          <Title
+            memos={filterMemos}
+            handleTitleClick={handleTitleClick}
+            handleDeleteTitleClick={handleDeleteTitleClick}
+          />
+          <Description selectMemo={selectMemo} editMemo={editMemo} toggleEditClick={toggleEditClick} />
         </div>
       </div>
     </>
-  )
+  );
+};
 
-}
-
-
-export default App
+export default App;
